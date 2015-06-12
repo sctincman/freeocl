@@ -20,16 +20,8 @@
 
 #include "freeocl.h"
 
-namespace FreeOCL
-{
-	class threadpool;
-}
-
 struct _cl_device_id : public FreeOCL::icd_table
 {
-	_cl_device_id();
-	~_cl_device_id();
-
 	const cl_device_type device_type;
 	const cl_uint vendor_id;
 	const cl_uint addressbits;
@@ -38,7 +30,6 @@ struct _cl_device_id : public FreeOCL::icd_table
 	std::string name;
 	std::string vendor;
 	const std::string version;
-	cl_uint cpu_cores;
 	const char *driver_version;
 	const char *device_profile;
 	const char *opencl_c_version;
@@ -92,7 +83,6 @@ struct _cl_device_id : public FreeOCL::icd_table
 	size_t printf_buffer_size;
 	cl_uint max_sub_devices;
 
-	FreeOCL::threadpool *pool;
 };
 
 #endif
