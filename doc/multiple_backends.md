@@ -5,38 +5,32 @@ The goal of this branch is to implement multiple backends for FreeOCL, with the 
 ## Overall points to consider
 
 ### Dispatching backend specific versions of API functions
-FreeOCL actually has a wonderfully thorough structure to it, with objects able to have their own dispatch table. The problem is currently there is only one dispatch table and it's replicated across many objects (for the purpose of the icd_api). Part of the work should go into cleaning up the use of the dispatch table (limiting what objects have a copy), and be able for these objects to change their dispatch table (for eg. an Epiphany device holds it's own dispatch table that includes pointers to Epiphany specific routines when needed, and the generic ones when not).
+FreeOCL actually has a wonderfully thorough structure to it, with objects able to have their own dispatch table. The problem is currently there is only one dispatch table present as a singleton, and access is granted across many objects (for the purpose of the icd_api). Work needs to be done to move away from the singleton and allow objects to change their dispatch table (for eg. an Epiphany device holds it's own dispatch table that includes pointers to Epiphany specific routines when needed, and the generic ones when not). The hurdle to this is the icd_api, which needs to access the dispatch table.
 
-On this note, I think it'd be worthwhile moving more of the generic/error checking code from the `src/*.cpp` files to `src/icd/icd_api.cpp`.
+On this note, I think it'd be worthwhile moving more of the generic/error checking code from the `src/*.cpp` files to `src/icd/icd_api.cpp`. This is already redundantly repeated (to make sure the object is not null, in order to access it's dispatch table).
 
 ### Buffers and memory management
 For the CPU backend, everything is local and that assumption is made throughout. However, a naive but simple approach would be to leave the host-side unchanged (hence storing all the buffers host-side), and add backend specific versions of the device-side buffer functions that just fetch from host memory.
 
 Ideally, the backend should handle memory management, and be able to move memory to/from the device as needed.
 
-## src/device.{cpp,h}
+## `src/device.{cpp,h}`
 
 This defines the devices available through the runtime, and how to query/control them through the API.
 
 Implementing the `_cl_device_id` struct seems to be left to implementors. Client applications do not manipulate it themselves, but pass it to routines defined by the runtime (as only the runtime knows its definition).
 
-FreeOCL currently implements `_cl_device_id` as an object, and uses the CPU backend as a singleton. Implementing backends will require an array of devices to be initialized, and procedures updated to probe and initialize all possible backends, as opposed to just returning/operating on the singleton implicitly.
+FreeOCL currently implements `_cl_device_id` as an object, and uses the CPU backend as a singleton. Implementing backends will require an array of devices to be initialized, and procedures updated to probe and initialize all possible backends, as opposed to just returning/operating on the singleton implicitly. FreeOCL currently has a single initializer for the singleton.
+
+The CPU backend dependent initializer was separated out into a separate object.
+
+Each device is implemented as a child object that extends the `cl_device_id`.
 
 ### What needs to be done
 
 #### `_cl_device_id` extended to include epiphany specific info
 
-There are a few options here:
-
-1. Backend specific variables can be added to this (further bloating this struct).
-2. Each backend implements a device specific `_cl_device_id` that inherits from a generic _cl_device_id (requires casting whenever device specific operations needed).
-3. Backend specific behavior defined in a separate FreeOCL object that is pointed to from the `_cl_device_id` (compositional objects).
-
-FreeOCL currently has a single initializer for the singleton. Most of this seems CPU backend dependent, and can be separated. Separating device specific initialization will make the code cleaner, and the extra function calls should not be a concern.
-
-For **2**, each device specific object just needs to implement its own initializer. **3** requires that, as well as adding the newly created object to `_cl_device_id` (likely through a void pointer).
-
-This could be accomplished with interfaces, but that does not fit with the rest of the codebase (which seems to favor either regular/compositional inheritance).
+A CPU backend was added, and a similar Epiphany object is needed.
 
 #### `_cl_device_id` extended to include compiler info
 
@@ -68,7 +62,7 @@ It wouldn't hurt to move this out into a separate file that is either included a
 
 `clCreateContextFromTypeFCL` hardcoded to return `CL_DEVICE_NOT_FOUND` for anything other than `CL_DEVICE_TYPE_CPU`. This needs to be changed. Likely just iterate the device array and check the type, collecting any devices that match.
 
-## `src/freeocl.{h,cpp}
+## `src/freeocl.{h,cpp}`
 
 `src/freeocl.h` contains a reference to the singleton `_cl_device_id`, will need to change this to the array.
 
@@ -95,6 +89,10 @@ The buffer objects seem to be a mostly host-side thing here. Most of the "intere
 The program will `dlclose` to cleanup program termination, and this may need to change for different backends, depending how the backends are implemented
 
 `clLinkProgramFCL` and friends will `dlopen` the binary of the kernel. For Epiphany we won't need to do this. This may be backend dependent, and rely on calling a device specific `load_program` routine (for eg, Epiphany would call the proper `ehal` routines to upload the kernel)
+
+A context and program object can be created for multiple devices. There is also a 1:1 relationship between devices and binary objects for the program. So far, program only stores a single binary object. This needs to be updated to hold a binary object per device, and the requisite queries and setter functions updated to reflect this.
+
+Currently working on making this a separate struct, `_cl_program_binary`, with a program object holding a vector of them. Currently the `cl_device_id` is a member of the binary struct, but I may need to change this, as I'm having difficulty writing the methods. I may need to make it a set with the `cl_device_id` as a key.
 
 ## `src/utils/commandqueue.cpp`
 
