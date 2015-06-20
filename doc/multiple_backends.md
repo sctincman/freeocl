@@ -14,6 +14,20 @@ For the CPU backend, everything is local and that assumption is made throughout.
 
 Ideally, the backend should handle memory management, and be able to move memory to/from the device as needed.
 
+### Kernel Functions
+
+The series of `_FCL_xxxx` functions configure/query kernel properties. These are implemented as functions generated from the kernels, compiled, then `dlsymed` into the main program.
+
+`_FCL_info` returns info about the kernel arguments, and this is only called when creating a kernel object. This can likely be abstracted into an object to allow backend specific implementations.
+
+`_FCL_init` only sets the global kernel parameters and possibly setting a sync flag. This can also be abstracted into a kernel specific routine.
+
+`_FCL_setwg` similar to above, just sets some global parameters.
+
+`_FCL_kernel` calls the actual kernel function, once for each thread.
+
+These are all CPU backend specific, and deal with the `include/FreeOCL/workitem.h`, which implements the CPU backend behavior for the device kernel. The host-side application should probably not be calling these directly, but a backend specific "get_kernel_info" or "init_kernels" that call backend specific routines. 
+
 ## `src/device.{cpp,h}`
 
 This defines the devices available through the runtime, and how to query/control them through the API.
