@@ -39,36 +39,15 @@
 
 namespace FreeOCL
 {
-	std::string RUNTIME_FREEOCL_CXX_COMPILER = FREEOCL_CXX_COMPILER;
-	std::string RUNTIME_FREEOCL_CXX_FLAGS = FREEOCL_CXX_FLAGS;
-	std::string RUNTIME_FREEOCL_CXX_INCLUDE = FREEOCL_CXX_INCLUDE;
-
-	struct __init
-	{
-		__init();
-	};
-	__init __init_instance;
-	__init::__init()
-	{
-		const char *env_FREEOCL_CXX_COMPILER = getenv("FREEOCL_CXX_COMPILER");
-		const char *env_FREEOCL_CXX_FLAGS = getenv("FREEOCL_CXX_FLAGS");
-		const char *env_FREEOCL_CXX_INCLUDE = getenv("FREEOCL_CXX_INCLUDE");
-		if (env_FREEOCL_CXX_COMPILER)
-			RUNTIME_FREEOCL_CXX_COMPILER = env_FREEOCL_CXX_COMPILER;
-		if (env_FREEOCL_CXX_FLAGS)
-			RUNTIME_FREEOCL_CXX_FLAGS = env_FREEOCL_CXX_FLAGS;
-		if (env_FREEOCL_CXX_INCLUDE)
-			RUNTIME_FREEOCL_CXX_INCLUDE = std::string("-I") + env_FREEOCL_CXX_INCLUDE;
-	}
-
-	std::string build_program(const std::string &options,
-							  const std::string &code,
-							  std::stringstream &log,
-							  FreeOCL::set<std::string> &kernels,
-							  bool &b_valid_options,
-							  const bool b_compile_only,
-							  const FreeOCL::map<std::string, std::string> &headers,
-							  std::string *temporary_filename)
+	std::string build_program(const cl_device_id device,
+				  const std::string &options,
+				  const std::string &code,
+				  std::stringstream &log,
+				  FreeOCL::set<std::string> &kernels,
+				  bool &b_valid_options,
+				  const bool b_compile_only,
+				  const FreeOCL::map<std::string, std::string> &headers,
+				  std::string *temporary_filename)
 	{
 		b_valid_options = true;
 
@@ -264,9 +243,9 @@ namespace FreeOCL
 		}
 
 		std::stringstream cmd;
-		cmd << RUNTIME_FREEOCL_CXX_COMPILER << ' '
-			<< RUNTIME_FREEOCL_CXX_FLAGS << ' '
-			<< RUNTIME_FREEOCL_CXX_INCLUDE
+		cmd << device->compiler << ' '
+			<< device->flags << ' '
+			<< device->include
 			<< compiler_extra_args
 			<< " -o " << filename_out
 			<< ' ' << filename_in
@@ -646,10 +625,11 @@ namespace FreeOCL
 		return gen.str();
 	}
 
-	std::string link_program(const std::string &options,
-							 const std::vector<std::string> &files_to_link,
-							  std::stringstream &log,
-							  bool &b_valid_options)
+	std::string link_program(const cl_device_id device,
+				 const std::string &options,
+				 const std::vector<std::string> &files_to_link,
+				 std::stringstream &log,
+				 bool &b_valid_options)
 	{
 		b_valid_options = true;
 
@@ -724,9 +704,9 @@ namespace FreeOCL
 		}
 		else			// Shared library (CL_PROGRAM_BINARY_TYPE_EXECUTABLE)
 		{
-			cmd << RUNTIME_FREEOCL_CXX_COMPILER
-				<< RUNTIME_FREEOCL_CXX_FLAGS
-				<< RUNTIME_FREEOCL_CXX_INCLUDE
+			cmd << device->compiler
+				<< device->flags
+				<< device->include
 				<< compiler_extra_args
 				<< " -o " << filename_out;
 		}

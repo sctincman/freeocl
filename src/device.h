@@ -83,6 +83,9 @@ struct _cl_device_id : public FreeOCL::icd_table
 	size_t printf_buffer_size;
 	cl_uint max_sub_devices;
 
+	std::string compiler;
+	std::string flags;
+	std::string includes;
 };
 
 #endif

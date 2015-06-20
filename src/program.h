@@ -21,6 +21,21 @@
 #include "freeocl.h"
 #include <string>
 #include <vector>
+#include <map>
+
+struct _cl_program_binary
+{
+	cl_device_id device;
+
+	cl_program_binary_type binary_type;
+
+	void *handle;
+	std::string binary_file;
+	std::string temporary_file;
+	cl_build_status build_status;
+	std::string build_options;
+	std::string build_log;
+}
 
 struct _cl_program : public FreeOCL::icd_table, public FreeOCL::ref_counter, public FreeOCL::mutex, public FreeOCL::valid_flag, public FreeOCL::context_resource
 {
@@ -29,17 +44,9 @@ struct _cl_program : public FreeOCL::icd_table, public FreeOCL::ref_counter, pub
 
 	std::string source_code;
 
-	std::vector<cl_device_id> devices;
+	std::map<cl_device_id, _cl_program_binary> binaries;
 
-	cl_program_binary_type binary_type;
-
-	void *handle;
-	std::string binary_file;
-	std::string temporary_file;
 	FreeOCL::set<std::string> kernel_names;
-	cl_build_status build_status;
-	std::string build_options;
-	std::string build_log;
 	int kernels_attached;
 };
 

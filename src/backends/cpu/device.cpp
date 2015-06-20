@@ -162,9 +162,23 @@ _cl_device_id_cpu::_cl_device_id_cpu() :
 	image_max_array_size(2048),
 	max_samplers(16),
 	printf_buffer_size(0x400000),
-	max_sub_devices(1)
+	max_sub_devices(1),
+	compiler(FREEOCL_CXX_COMPILER),
+	flags(FREEOCL_CXX_FLAGS),
+	includes(FREEOCL_CXX_INCLUDE)
 {
 	using namespace FreeOCL;
+
+	//Allow overriding of the defaults with environmental variable
+	const char *env_FREEOCL_CXX_COMPILER = getenv("FREEOCL_CXX_COMPILER");
+	const char *env_FREEOCL_CXX_FLAGS = getenv("FREEOCL_CXX_FLAGS");
+	const char *env_FREEOCL_CXX_INCLUDE = getenv("FREEOCL_CXX_INCLUDE");
+	if (env_FREEOCL_CXX_COMPILER)
+		compiler = env_FREEOCL_CXX_COMPILER;
+	if (env_FREEOCL_CXX_FLAGS)
+		flags = env_FREEOCL_CXX_FLAGS;
+	if (env_FREEOCL_CXX_INCLUDE)
+		includes = std::string("-I") + env_FREEOCL_CXX_INCLUDE;
 
 	pool = new FreeOCL::threadpool();
 

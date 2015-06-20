@@ -30,14 +30,15 @@ namespace FreeOCL
 	// Return a string to the .so/.o file built
 	// In case an error occurs, it returns an empty string
 	// In any case it'll write logs
-	std::string build_program(const std::string &options,
-							  const std::string &code,
-							  std::stringstream &log,
-							  FreeOCL::set<std::string> &kernels,
-							  bool &b_valid_options,
-							  const bool b_compile_only = false,
-							  const FreeOCL::map<std::string, std::string> &headers = FreeOCL::map<std::string, std::string>(),
-							  std::string *temporary_filename = NULL);
+	std::string build_program(const cl_device_id device,
+				  const std::string &options,
+				  const std::string &code,
+				  std::stringstream &log,
+				  FreeOCL::set<std::string> &kernels,
+				  bool &b_valid_options,
+				  const bool b_compile_only = false,
+				  const FreeOCL::map<std::string, std::string> &headers = FreeOCL::map<std::string, std::string>(),
+				  std::string *temporary_filename = NULL);
 
 	// Return the output of the C preprocessor on the parameter 'code'
 	std::string preprocess_code(const std::string &code,
@@ -56,10 +57,11 @@ namespace FreeOCL
 	// Return a string to the .so/.a file built
 	// In case an error occurs, it returns an empty string
 	// In any case it'll write logs
-	std::string link_program(const std::string &options,
-							 const std::vector<std::string> &files_to_link,
-							  std::stringstream &log,
-							  bool &b_valid_options);
+	std::string link_program(const cl_device_id device,
+				 const std::string &options,
+				 const std::vector<std::string> &files_to_link,
+				 std::stringstream &log,
+				 bool &b_valid_options);
 }
 
 #endif

@@ -186,10 +186,15 @@ extern "C"
 		}
 		unlock.handle(program);
 
-		if (program->build_status != CL_BUILD_SUCCESS)
+		for(std::map<cl_device_id, _cl_program_binary> it = program->binaries.begin()
+			    ; it != program->binaries.end()
+			    ; ++it)
 		{
-			SET_RET(CL_INVALID_PROGRAM_EXECUTABLE);
-			return 0;
+			if (it->build_status != CL_BUILD_SUCCESS)
+			{
+				SET_RET(CL_INVALID_PROGRAM_EXECUTABLE);
+				return 0;
+			}
 		}
 
 		if (program->kernel_names.count(kernel_name) == 0)
@@ -201,6 +206,7 @@ extern "C"
 		cl_kernel kernel = new _cl_kernel;
 		kernel->program = program;
 		kernel->function_name = kernel_name;
+
 		kernel->__FCL_info = (size_t (*)(size_t, int*, const char **, const char **, int *, int *)) dlsym(program->handle, ("__FCL_info_" + kernel->function_name).c_str());
 		kernel->__FCL_init = (bool (*)(const void*,size_t,const size_t*,const size_t *,const size_t*)) dlsym(program->handle, ("__FCL_init_" + kernel->function_name).c_str());
 		kernel->__FCL_setwg = (void (*)(char * const,const size_t *, ucontext_t *, ucontext_t *)) dlsym(program->handle, ("__FCL_setwg_" + kernel->function_name).c_str());
@@ -251,8 +257,13 @@ extern "C"
 			return CL_INVALID_PROGRAM;
 		unlock.handle(program);
 
-		if (program->binary_type != CL_PROGRAM_BINARY_TYPE_EXECUTABLE)
-			return CL_INVALID_PROGRAM_EXECUTABLE;
+		for(std::map<cl_device_id, _cl_program_binary> it = program->binaries.begin()
+				    ; it != program->binaries.end()
+				    ; ++it)
+		{
+			if (it->binary_type != CL_PROGRAM_BINARY_TYPE_EXECUTABLE)
+				return CL_INVALID_PROGRAM_EXECUTABLE;
+		}
 
 		if (num_kernels_ret)
 			*num_kernels_ret = program->kernel_names.size();
@@ -602,7 +613,10 @@ extern "C"
 			return CL_INVALID_KERNEL;
 		unlock.handle(kernel);
 
-		if (!FreeOCL::is_valid(device) && (kernel->program->devices.size() > 1))
+		if (!FreeOCL::is_valid(device))
+			return CL_INVALID_DEVICE;
+
+		if(std::find(program->binaries.begin(), program->binaries.end(), device) == program->binaries.end())
 			return CL_INVALID_DEVICE;
 
 		bool bTooSmall = false;
