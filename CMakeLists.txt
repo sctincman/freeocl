@@ -69,8 +69,10 @@ endif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 option(FREEOCL_RUN_GDB_ON_CRASH "run gdb on crash")
 option(FREEOCL_ALWAYS_LOAD_FREEOCL "always try to load FreeOCL even though it's not registered on the system" OFF)
 option(FREEOCL_DEVICE_EPIPHANY "build support for the Epiphany device" OFF)
+
 if(FREEOCL_DEVICE_EPIPHANY)
 	add_definitions(-DFREEOCL_DEVICE_EPIPHANY)
+	find_program(FREEOCL_EPIPHANY_COMPILER NAMES "epiphany-gcc" "e-gcc")
 endif(FREEOCL_DEVICE_EPIPHANY)
 
 configure_file(config.h.cmake ${FreeOCL_SOURCE_DIR}/include/FreeOCL/config.h)
