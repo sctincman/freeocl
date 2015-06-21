@@ -38,7 +38,7 @@
 namespace FreeOCL
 {
 	extern cl_platform_id platform;
-	extern cl_device_id device;
+	extern std::vector<cl_device_id> devices;
 	extern FreeOCL::set<cl_context> valid_contexts;
 	extern FreeOCL::set<cl_command_queue> valid_command_queues;
 	extern FreeOCL::set<cl_mem> valid_mems;

@@ -136,7 +136,7 @@ namespace FreeOCL
 
 	bool is_valid(cl_device_id d)
 	{
-		return d == FreeOCL::device;
+		return (std::find(FreeOCL::devices.begin(), FreeOCL::devices.end(), d) != FreeOCL::devices.end());
 	}
 
 	bool is_valid(cl_platform_id p)
