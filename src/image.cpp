@@ -232,11 +232,22 @@ extern "C"
 							void *host_ptr,
 							cl_int *errcode_ret)
 	{
+		size_t max_width = UINT_MAX;
+		size_t max_height = UINT_MAX;
+		for(std::vector<cl_device_id> it =context->devices.begin()
+			    ; it != context->devices.end()
+			    ; ++it)
+		{
+			if (it->image2d_max_width < max_width)
+				max_width = it->image2d_max_width;
+			if (it->image2d_max_height < max_height)
+				max_height = it->image2d_max_height;
+		}
 		MSG(clCreateImage2DFCL);
 		if (image_width == 0
-				|| image_height == 0
-				|| image_width > FreeOCL::device->image2d_max_width
-				|| image_height > FreeOCL::device->image2d_max_height)
+		    || image_height == 0
+		    || image_width > max_width
+		    || image_height > max_height)
 		{
 			SET_RET(CL_INVALID_IMAGE_SIZE);
 			return 0;
@@ -267,13 +278,27 @@ extern "C"
 							void *host_ptr,
 							cl_int *errcode_ret)
 	{
+		size_t max_width = UINT_MAX;
+		size_t max_height = UINT_MAX;
+		size_t max_depth = UINT_MAX;
+		for(std::vector<cl_device_id> it =context->devices.begin()
+			    ; it != context->devices.end()
+			    ; ++it)
+		{
+			if (it->image3d_max_width < max_width)
+				max_width = it->image3d_max_width;
+			if (it->image3d_max_height < max_height)
+				max_height = it->image3d_max_height;
+			if (it->image3d_max_depth < max_depth)
+				max_depth = it->image3d_max_depth;
+		}
 		MSG(clCreateImage3DFCL);
 		if (image_width == 0
-				|| image_height == 0
-				|| image_depth <= 1
-				|| image_width > FreeOCL::device->image3d_max_width
-				|| image_height > FreeOCL::device->image3d_max_height
-				|| image_depth > FreeOCL::device->image3d_max_depth)
+		    || image_height == 0
+		    || image_depth <= 1
+		    || image_width > max_width
+		    || image_height > max_height
+		    || image_depth > max_depth)
 		{
 			SET_RET(CL_INVALID_IMAGE_SIZE);
 			return 0;
@@ -1104,8 +1129,16 @@ extern "C"
 		switch(image_desc->image_type)
 		{
 		case CL_MEM_OBJECT_IMAGE1D_BUFFER:
+			size_t max_buffer = UINT_MAX;
+			for(std::vector<cl_device_id> it = context->devices.begin()
+				    ; it != context->devices.end()
+				    ; ++it)
+			{
+				if (it->image_max_buffer_size < max_buffer)
+					max_buffer = it->image_max_buffer_size;
+			}
 			if (image_desc->image_width == 0
-					|| image_desc->image_width > FreeOCL::device->image_max_buffer_size)
+					|| image_desc->image_width > max_buffer)
 			{
 				SET_RET(CL_INVALID_IMAGE_DESCRIPTOR);
 				return NULL;
@@ -1118,8 +1151,16 @@ extern "C"
 			image_width = image_desc->image_width;
 			break;
 		case CL_MEM_OBJECT_IMAGE1D:
+			size_t max_width = UINT_MAX;
+			for(std::vector<cl_device_id> it = context->devices.begin()
+				    ; it != context->devices.end()
+				    ; ++it)
+			{
+				if (it->image2d_max_width < max_width)
+					max_width = it->image2d_max_width;
+			}
 			if (image_desc->image_width == 0
-					|| image_desc->image_width > FreeOCL::device->image2d_max_width)
+					|| image_desc->image_width > max_width)
 			{
 				SET_RET(CL_INVALID_IMAGE_DESCRIPTOR);
 				return NULL;
@@ -1127,9 +1168,20 @@ extern "C"
 			image_width = image_desc->image_width;
 			break;
 		case CL_MEM_OBJECT_IMAGE1D_ARRAY:
+			size_t max_width = UINT_MAX;
+			size_t max_array = UINT_MAX;
+			for(std::vector<cl_device_id> it = context->devices.begin()
+				    ; it != context->devices.end()
+				    ; ++it)
+			{
+				if (it->image2d_max_width < max_width)
+					max_width = it->image2d_max_width;
+				if (it->image_max_array_size < max_array)
+					max_array = it->image_max_array_size;
+			}
 			if (image_desc->image_width == 0 || image_desc->image_array_size == 0
-					|| image_desc->image_width > FreeOCL::device->image2d_max_width
-					|| image_desc->image_array_size > FreeOCL::device->image_max_array_size)
+					|| image_desc->image_width > max_width
+					|| image_desc->image_array_size > max_array)
 			{
 				SET_RET(CL_INVALID_IMAGE_DESCRIPTOR);
 				return NULL;
@@ -1139,9 +1191,20 @@ extern "C"
 			image_row_pitch = image_desc->image_row_pitch;
 			break;
 		case CL_MEM_OBJECT_IMAGE2D:
+			size_t max_width = UINT_MAX;
+			size_t max_height = UINT_MAX;
+			for(std::vector<cl_device_id> it = context->devices.begin()
+				    ; it != context->devices.end()
+				    ; ++it)
+			{
+				if (it->image2d_max_width < max_width)
+					max_width = it->image2d_max_width;
+				if (it->image2d_max_height < max_height)
+					max_height = it->image2d_max_height;
+			}
 			if (image_desc->image_width == 0 || image_desc->image_height == 0
-					|| image_desc->image_width > FreeOCL::device->image2d_max_width
-					|| image_desc->image_height > FreeOCL::device->image2d_max_height)
+					|| image_desc->image_width > max_width
+					|| image_desc->image_height > max_height)
 			{
 				SET_RET(CL_INVALID_IMAGE_DESCRIPTOR);
 				return NULL;
@@ -1151,10 +1214,24 @@ extern "C"
 			image_row_pitch = image_desc->image_row_pitch;
 			break;
 		case CL_MEM_OBJECT_IMAGE2D_ARRAY:
+			size_t max_width = UINT_MAX;
+			size_t max_height = UINT_MAX;
+			size_t max_array = UINT_MAX;
+			for(std::vector<cl_device_id> it = context->devices.begin()
+				    ; it != context->devices.end()
+				    ; ++it)
+			{
+				if (it->image2d_max_width < max_width)
+					max_width = it->image2d_max_width;
+				if (it->image2d_max_height < max_height)
+					max_height = it->image2d_max_height;
+				if (it->image_max_array_size < max_array)
+					max_array = it->image_max_array_size;
+			}
 			if (image_desc->image_width == 0 || image_desc->image_height == 0 || image_desc->image_array_size == 0
-					|| image_desc->image_width > FreeOCL::device->image2d_max_width
-					|| image_desc->image_height > FreeOCL::device->image2d_max_height
-					|| image_desc->image_array_size > FreeOCL::device->image_max_array_size)
+					|| image_desc->image_width > max_width
+					|| image_desc->image_height > max_height
+					|| image_desc->image_array_size > max_array)
 			{
 				SET_RET(CL_INVALID_IMAGE_DESCRIPTOR);
 				return NULL;
@@ -1166,10 +1243,24 @@ extern "C"
 			image_slice_pitch = image_desc->image_slice_pitch;
 			break;
 		case CL_MEM_OBJECT_IMAGE3D:
+			size_t max_width = UINT_MAX;
+			size_t max_height = UINT_MAX;
+			size_t max_depth = UINT_MAX;
+			for(std::vector<cl_device_id> it =context->devices.begin()
+				    ; it != context->devices.end()
+				    ; ++it)
+			{
+				if (it->image3d_max_width < max_width)
+					max_width = it->image3d_max_width;
+				if (it->image3d_max_height < max_height)
+					max_height = it->image3d_max_height;
+				if (it->image3d_max_depth < max_depth)
+					max_depth = it->image3d_max_depth;
+			}
 			if (image_desc->image_width == 0 || image_desc->image_height == 0 || image_desc->image_depth == 0
-					|| image_desc->image_width > FreeOCL::device->image3d_max_width
-					|| image_desc->image_height > FreeOCL::device->image3d_max_height
-					|| image_desc->image_depth > FreeOCL::device->image3d_max_depth)
+					|| image_desc->image_width > max_width
+					|| image_desc->image_height > max_height
+					|| image_desc->image_depth > max_depth)
 			{
 				SET_RET(CL_INVALID_IMAGE_DESCRIPTOR);
 				return NULL;
