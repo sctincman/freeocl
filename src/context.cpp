@@ -64,7 +64,7 @@ extern "C"
 		c->devices.reserve(num_devices);
 		for(size_t i = 0 ; i < num_devices ; ++i)
 		{
-			if (devices[i] != FreeOCL::device)
+			if((std::find(FreeOCL::devices.begin(), FreeOCL::devices.end(), devices[i]) == FreeOCL::devices.end()))
 			{
 				SET_RET(CL_INVALID_DEVICE);
 				delete c;
@@ -145,19 +145,33 @@ extern "C"
 			}
 		}
 
-		if (device_type & (CL_DEVICE_TYPE_CPU | CL_DEVICE_TYPE_DEFAULT));
-		else if (device_type & (CL_DEVICE_TYPE_GPU | CL_DEVICE_TYPE_ACCELERATOR | CL_DEVICE_TYPE_CUSTOM))
-		{
-			SET_RET(CL_DEVICE_NOT_FOUND);
-			return 0;
-		}
+		if (device_type & (CL_DEVICE_TYPE_CPU
+				   | CL_DEVICE_TYPE_DEFAULT
+				   | CL_DEVICE_TYPE_GPU
+				   | CL_DEVICE_TYPE_ACCELERATOR
+				   | CL_DEVICE_TYPE_CUSTOM));
 		else
 		{
 			SET_RET(CL_INVALID_DEVICE_TYPE);
 			return 0;
 		}
 
-		return clCreateContextFCL(properties, 1, &FreeOCL::device, pfn_notify, user_data, errcode_ret);
+		std::vector<cl_device_id> devices_found;
+		for(std::vector<cl_device_id> it = FreeOCL::devices.begin()
+			    ; it != FreeOCL::devices.end()
+			    ; ++it)
+		{
+			if (device_type & it->device_type)
+				devices_found.push_back(it);
+		}
+
+		if (devices.empty())
+		{
+			SET_RET(CL_DEVICE_NOT_FOUND);
+			return 0;
+		}
+
+		return clCreateContextFCL(properties, devices.size(), &devices, pfn_notify, user_data, errcode_ret);
 	}
 
 	cl_int clRetainContextFCL (cl_context context)
